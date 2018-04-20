@@ -136,7 +136,7 @@ class User(models.Model):
     weight = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    followed_users = models.ManyToManyField("self", related_name="following_users")
+    followed_users = models.ManyToManyField("self", related_name="following_users", symmetrical=False)
 
     objects = UserManager()
 

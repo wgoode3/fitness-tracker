@@ -136,6 +136,7 @@ class User(models.Model):
     weight = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    followed_users = models.ManyToManyField("self", related_name="following_users")
 
     objects = UserManager()
 
@@ -151,7 +152,7 @@ class WorkoutManager(models.Manager):
         if len(start) < 1:
             errors.append("Start Date and Time are required")
         else:
-            st = datetime.strptime(start, "%Y-%m-%d")
+            st = datetime.strptime(start, "%Y-%m-%d %H:%M")
             print st
             if st > datetime.now():
                 errors.append("Start must be in the past")

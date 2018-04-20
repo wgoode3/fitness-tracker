@@ -29,7 +29,7 @@ class Activity(models.Model):
         return "<Activity object: ({}) {}>".format(self.id, self.name)
 
 class UserManager(models.Manager):
-    def register(self, name, username, email, password, confirm):
+    def register(self, name, username, email, dob, height, weight, password, confirm):
         errors = []
         if len(name) < 2:
             errors.append("Name must be 2 characters or more")
@@ -42,9 +42,22 @@ class UserManager(models.Manager):
         elif not EMAIL_REGEX.match(email):
             errors.append("Invalid email")
         else:
-            User.objects.filter(email=email)
-            if len(email) > 0:
+            usersMatchingEmail = User.objects.filter(email=email)
+            if len(usersMatchingEmail) > 0:
                 errors.append("Email already in use")
+
+        if len(dob) < 1:
+            errors.append("Date of Birth is required")
+        else:
+            day = datetime.strptime(dob, "%Y-%m-%d")
+            if day > datetime.now():
+                errors.append("Date of Birth must be in the past")
+
+        if len(height) < 1:
+            errors.append("Height is required")
+
+        if len(weight) < 1:
+            errors.append("Weight is required")
 
         if len(password) < 1:
             errors.append("Password is required")
@@ -70,8 +83,46 @@ class UserManager(models.Manager):
                 name=name,
                 username=username,
                 email=email.lower(),
+                dob=dob,
+                height=height,
+                weight=weight,
                 password=bcrypt.hashpw(password.encode(), bcrypt.gensalt())
             )
+
+        return response
+
+    def login(self, email, password):
+        errors = []
+
+        if len(email) < 1:
+            errors.append("Email is required")
+        elif not EMAIL_REGEX.match(email):
+            errors.append("Invalid email")
+        else:
+            usersMatchingEmail = User.objects.filter(email=email)
+            if len(usersMatchingEmail) == 0:
+                errors.append("Unknown email")
+
+        if len(password) < 1:
+            errors.append("Password is required")
+        elif len(password) < 8:
+            errors.append("Password must be 8 characters or more")
+
+        response = {
+            "errors": errors,
+            "valid": True,
+            "user": None 
+        }
+
+        if len(errors) == 0:
+            if bcrypt.checkpw(password.encode(), usersMatchingEmail[0].password.encode()):
+                response["user"] = usersMatchingEmail[0]
+            else:
+                errors.append("Incorrect password")
+
+        if len(errors) > 0:
+            response["errors"] = errors
+            response["valid"] = False
 
         return response
 
@@ -80,6 +131,9 @@ class User(models.Model):
     username = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
+    dob = models.DateTimeField()
+    height = models.IntegerField()
+    weight = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -46,6 +46,10 @@ def login(request):
 def dashboard(request):
     # BMI: height in meters divided by weight in kilograms squared
 
+    if "user_id" not in request.session:
+        messages.add_message(request, messages.ERROR, "You need to log in first")
+        return redirect("/")
+
     user = User.objects.get(id=request.session["user_id"])
     user_workouts = Workout.objects.filter(user_id=request.session["user_id"])
     other_workouts = Workout.objects.all().exclude(user_id=request.session["user_id"]).order_by("-start")
@@ -72,6 +76,11 @@ def logout(request):
     return redirect("/")
 
 def new_workout(request):
+
+    if "user_id" not in request.session:
+        messages.add_message(request, messages.ERROR, "You need to log in first")
+        return redirect("/")
+
     return render(request, "fitness_app/new_workout.html", {"activities": Activity.objects.all()})
 
 def add_workout(request):
